@@ -38,7 +38,8 @@ class Locations {
 }
 
 Future<Locations> getGoogleOffices() async {
-  const googleLocationsURL = 'https://4face.net/4face_appdated/app/main/nowon/test.json';
+  String googleLocationsURL = 'http://4face.net/4face_appdated/app/main/nowon/nowOnLocation.php';
+
 //  TODO: ここを弊社ファイルに変更する
   try{
     final response = await http.get(Uri.parse(googleLocationsURL));
@@ -52,8 +53,29 @@ Future<Locations> getGoogleOffices() async {
   }
   
   return Locations.fromJson(
-    json.decode(await rootBundle.loadString('https://about.google/static/data/locations.json'))
+    json.decode(await rootBundle.loadString('http://4face.net/4face_appdated/app/main/nowon/nowOnLocation.php'))
   );
 
 }
 
+
+Future<Locations> redraw({required double lat,required double lng}) async {
+  String googleLocationsURL = 'http://4face.net/4face_appdated/app/main/nowon/nowOnLocation.php?lat=$lat&lng=$lng';
+  try{
+    final response = await http.get(Uri.parse(googleLocationsURL));
+    print(googleLocationsURL);
+    if(response.statusCode == 200){
+      print(response);
+      return Locations.fromJson(json.decode(response.body));
+    }
+  }catch(e){
+    if (kDebugMode) {
+      print(e);
+    }
+  }
+
+  return Locations.fromJson(
+      json.decode(await rootBundle.loadString('asset/locations'))
+  );
+
+}

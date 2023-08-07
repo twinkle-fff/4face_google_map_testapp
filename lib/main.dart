@@ -28,7 +28,6 @@ class MyApp extends StatelessWidget {
 }
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -40,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Map<String,BitmapDescriptor> _icons = {};
   late GoogleMapController mapController;
   final LatLng _center = const LatLng(35.66078134297374, 139.7073353749213);
+  late LatLng now = _center;
   void _onMapCreated(GoogleMapController controller) async {
     setState(() {
       _markers.clear();
@@ -53,24 +53,50 @@ class _MyHomePageState extends State<MyHomePage> {
     setState (() {
       _markers.clear();
       for(final office in googleOffices.places){
-          // final icon = createIcon(office.num);
-          final marker = Marker(markerId: MarkerId(office.name),
-              icon: _icons[office.name] ?? BitmapDescriptor.defaultMarker,
-              position: LatLng(office.lat,office.lng),
-              infoWindow: InfoWindow(
-                title: office.name,
-              ));
+        // final icon = createIcon(office.num);
+        final marker = Marker(markerId: MarkerId(office.name),
+            icon: _icons[office.name] ?? BitmapDescriptor.defaultMarker,
+            position: LatLng(office.lat,office.lng),
+            infoWindow: InfoWindow(
+              title: office.name,
+            ));
         _markers[office.name] = marker;
       }
     });
   }
+
+  void redraw() async {
+    if(now == _center){return;}
+    setState(() {
+      _markers.clear();
+    });
+    final googleOffices = await locations.redraw(lat: now.latitude,lng: now.longitude);
+    for(final office in googleOffices.places) {
+      _icons[office.name] = await createIcon(office.num);
+    }
+
+    setState (() {
+      _markers.clear();
+      for(final office in googleOffices.places){
+        // final icon = createIcon(office.num);
+        final marker = Marker(markerId: MarkerId(office.name),
+            icon: _icons[office.name] ?? BitmapDescriptor.defaultMarker,
+            position: LatLng(office.lat,office.lng),
+            infoWindow: InfoWindow(
+              title: office.name,
+            ));
+        _markers[office.name] = marker;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "ないすちんちん",
+          "google_map",
           style: TextStyle(
             color: Colors.white,
             fontSize: 16.0,
@@ -83,9 +109,15 @@ class _MyHomePageState extends State<MyHomePage> {
         onMapCreated: _onMapCreated,
         initialCameraPosition: CameraPosition(
           target: _center,
-          zoom: 8.0,
+          zoom: 15.0,
         ),
+        onCameraMove: (cameraPosition){
+          now = cameraPosition.target;
+        },
+        onCameraIdle: redraw,
+        myLocationButtonEnabled: true,
         markers: _markers.values.toSet(),
+        minMaxZoomPreference: const MinMaxZoomPreference(12.0,19.0),
       ),
     );
   }
@@ -97,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final m = MediaQuery.devicePixelRatioOf(context);
     canvas.scale(m,m);
     final paint = Paint();
-    paint.color = (val == 0) ? Color(0xFF828577) : Color(0xFF373835);
+    paint.color = (val == 0) ? const Color(0xFF828577) : const Color(0xFF373835);
     canvas.drawCircle(const Offset(20,20), 20, paint);
     canvas.drawRect(const Rect.fromLTWH(20, 0, 26, 40),paint);
     canvas.drawCircle(const Offset(46,20), 20, paint);
@@ -106,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
       text: TextSpan(
         text: val.toString(),
         style: TextStyle(
-          color: (val == 0) ? Color(0xFFACAFA4) : Color(0xFFB5E825),
+          color: (val == 0) ? const Color(0xFFACAFA4) : const Color(0xFFB5E825),
           fontWeight: FontWeight.bold,
           fontSize: 16,
         ),

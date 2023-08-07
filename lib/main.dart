@@ -1,7 +1,9 @@
 
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'location.dart' as locations;
 void main() {
@@ -33,6 +35,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 class _MyHomePageState extends State<MyHomePage> {
+  bool f = false;
   final Map<String,Marker> _markers = {};
   Map<String,BitmapDescriptor> _icons = {};
   late GoogleMapController mapController;
@@ -117,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-    final image = await pictureRecorder.endRecording().toImage(66*m.toInt(),40*m.toInt());
+    final image = await pictureRecorder.endRecording().toImage((66*m).ceil(),(40*m).ceil());
     final data = await image.toByteData(format: ImageByteFormat.png);
     final Uint8List bytes = data!.buffer.asUint8List();
     return BitmapDescriptor.fromBytes(bytes);
